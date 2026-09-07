@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Ore Lavoro</title>
+</head>
+<body>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dipendenti">Dipendenti</button>
+    <button class="tab" data-tab="agenda">Agenda</button>
+    <button class="tab" data-tab="riepilogo">Riepilogo</button>
+  </nav>
+
+  <main>
+    <section id="dipendenti" class="page">
+      <div class="ordinamento">
+        <label for="selettore-ordinamento">Ordina dipendenti:</label>
+        <select id="selettore-ordinamento">
+          <option value="personalizzato">Personalizzato</option>
+          <option value="az">A-Z</option>
+          <option value="orario">Orario</option>
+          <option value="totale">Totale</option>
+        </select>
+        <button id="btn-salva-ordine" class="btn-salva-ordine" type="button">Salva ordine</button>
+      </div>
+      <table class="dip-table">
+        <thead>
+          <tr>
+            <th class="col-nome">NOME</th>
+            <th class="col-giorno">
+              <label for="selettore-giorno" class="sr-only">Giorno visualizzato</label>
+              <select id="selettore-giorno" aria-label="Giorno visualizzato">
+                <option value="lunedi">LUNEDÌ</option>
+                <option value="martedi">MARTEDÌ</option>
+                <option value="mercoledi">MERCOLEDÌ</option>
+                <option value="giovedi">GIOVEDÌ</option>
+                <option value="venerdi">VENERDÌ</option>
+                <option value="sabato">SABATO</option>
+                <option value="domenica">DOMENICA</option>
+              </select>
+              <button id="btn-aggiungi-tutti-giorni" class="btn-aggiungi-tutti-giorni" type="button">
+                Aggiungi a tutti i giorni
+              </button>
+            </th>
+            <th class="col-tot">TOT</th>
+          </tr>
+        </thead>
+        <tbody id="dip-body">
+          <!-- Le righe dei dipendenti vanno qui -->
+        </tbody>
+      </table>
+      <button id="btn-aggiungi" class="btn-add">+</button>
+      <p class="save-status">Salvataggio automatico attivo su questo dispositivo</p>
+    </section>
+
+    <section id="agenda" class="page" hidden>
+      <div class="ordinamento">
+        <label for="agenda-selettore-ordinamento">Ordina dipendenti:</label>
+        <select id="agenda-selettore-ordinamento">
+          <option value="personalizzato">Personalizzato</option>
+          <option value="az">A-Z</option>
+          <option value="orario">Orario</option>
+          <option value="totale">Totale</option>
+        </select>
+        <button id="agenda-btn-salva-ordine" class="btn-salva-ordine" type="button">Salva ordine</button>
+      </div>
+      <table class="dip-table">
+        <thead>
+          <tr>
+            <th class="col-nome">NOME</th>
+            <th class="col-giorno">
+              <label for="agenda-selettore-data" class="sr-only">Data agenda</label>
+              <div class="selettore-data-agenda">
+                <input id="agenda-data-visibile" type="text" readonly aria-hidden="true">
+                <input id="agenda-selettore-data" type="date" aria-label="Data agenda">
+              </div>
+            </th>
+            <th class="col-tot">TOT</th>
+          </tr>
+        </thead>
+        <tbody id="agenda-body"></tbody>
+      </table>
+      <p class="save-status">Agenda sincronizzata con i dipendenti</p>
+    </section>
+
+    <section id="riepilogo" class="page" hidden>
+      <div class="riepilogo-controlli">
+        <button id="riepilogo-mese-precedente" type="button">&lt;</button>
+        <div class="selettore-mese-riepilogo">
+          <input id="riepilogo-mese-visibile" type="text" readonly aria-hidden="true">
+          <input id="riepilogo-mese" type="month" aria-label="Mese riepilogo">
+        </div>
+        <button id="riepilogo-mese-successivo" type="button">&gt;</button>
+      </div>
+      <div class="riepilogo-tabella-scroll">
+        <table class="riepilogo-table">
+          <thead id="riepilogo-head"></thead>
+          <tbody id="riepilogo-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

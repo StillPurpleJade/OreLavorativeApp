@@ -1,0 +1,9 @@
+{
+  "name": "Ore Lavoro",
+  "short_name": "OreLavoro",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#8b00ff",
+  "icons": []
+}
