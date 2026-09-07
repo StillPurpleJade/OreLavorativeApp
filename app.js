@@ -40,14 +40,20 @@ function dataDaMese(mese, giorno) {
 }
 
 function minutiAgenda(row, data) {
+  return differenzeTurniAgenda(row, data).reduce((totale, differenza) => totale + differenza.minuti, 0);
+}
+
+function differenzeTurniAgenda(row, data) {
   const turni = getTurniAgenda(row, data);
   const giorno = getGiornoSettimana(data);
   const base = row._dati.giorni[giorno] || row._dati.turni;
   const assenze = row._dati.assenze[data] || {};
-  return turni.reduce((totale, turno, indice) => {
-    if (assenze[indice]) return totale - getMinutiTurni(base.slice(indice, indice + 1));
-    return totale + getMinutiTurni([turno]) - getMinutiTurni(base.slice(indice, indice + 1));
-  }, 0);
+  return turni.map((turno, indice) => ({
+    minuti: assenze[indice]
+      ? -getMinutiTurni(base.slice(indice, indice + 1))
+      : getMinutiTurni([turno]) - getMinutiTurni(base.slice(indice, indice + 1)),
+    assente: Boolean(assenze[indice])
+  }));
 }
 
 function formattaDifferenza(minuti) {
@@ -91,22 +97,38 @@ function aggiornaRiepilogo() {
     nome.textContent = row._dati.nome || 'Nome...';
     nome.className = 'riepilogo-nome-fisso';
     tr.appendChild(nome);
-    let totale = 0;
+    const totaliPerTurno = [];
     for (let giorno = 1; giorno <= giorniNelMese; giorno += 1) {
       const data = dataDaMese(riepilogoMese.value, giorno);
-      const minuti = minutiAgenda(row, data);
-      totale += minuti;
+      const differenze = differenzeTurniAgenda(row, data);
       const td = document.createElement('td');
-      td.textContent = minuti === 0 ? '' : `${minuti > 0 ? '+' : ''}${minuti}`;
-      const assenze = row._dati.assenze[data];
-      if (assenze && Object.keys(assenze).length > 0) {
-        td.className = 'totale-assenza';
-      }
+      differenze.forEach(({ minuti, assente }, indiceTurno) => {
+        if (totaliPerTurno[indiceTurno] === undefined) totaliPerTurno[indiceTurno] = 0;
+        if (assente) {
+          const valore = document.createElement('span');
+          valore.className = 'riepilogo-valore riepilogo-assenza';
+          valore.textContent = '/';
+          td.appendChild(valore);
+          return;
+        }
+        totaliPerTurno[indiceTurno] += minuti;
+        const valore = document.createElement('span');
+        valore.className = 'riepilogo-valore';
+        if (minuti < 0) valore.classList.add('totale-negativo');
+        valore.textContent = minuti === 0 ? '0' : `${minuti > 0 ? '+' : ''}${minuti}`;
+        td.appendChild(valore);
+      });
       tr.appendChild(td);
     }
     const totaleCell = document.createElement('td');
-    totaleCell.textContent = formattaDifferenza(totale);
     totaleCell.className = 'riepilogo-totale-fisso';
+    totaliPerTurno.forEach(totale => {
+      const valore = document.createElement('span');
+      valore.className = 'riepilogo-valore';
+      if (totale < 0) valore.classList.add('totale-negativo');
+      valore.textContent = totale === 0 ? '0' : formattaDifferenza(totale);
+      totaleCell.appendChild(valore);
+    });
     tr.appendChild(totaleCell);
     riepilogoBody.appendChild(tr);
   });
@@ -290,12 +312,17 @@ function aggiornaDataAgendaVisibile() {
     : '';
 }
 
-agendaDataVisibile.addEventListener('click', () => {
+function apriSelettoreDataAgenda() {
   if (typeof agendaSelettoreData.showPicker === 'function') {
     agendaSelettoreData.showPicker();
   } else {
     agendaSelettoreData.focus();
   }
+}
+
+agendaDataVisibile.addEventListener('click', apriSelettoreDataAgenda);
+agendaDataVisibile.parentElement.addEventListener('click', evento => {
+  if (evento.target !== agendaSelettoreData) apriSelettoreDataAgenda();
 });
 
 function getTurniAgenda(row, data) {
@@ -359,6 +386,9 @@ function aggiornaTotaleAgenda(row, container, data) {
 function creaTurnoAgenda(row, turno, container, data, indice, eliminabile = false) {
   const div = document.createElement('div');
   div.className = 'turno';
+  const giorno = getGiornoSettimana(data);
+  const base = row._dati.giorni[giorno] || row._dati.turni;
+  const turnoBase = base[indice] || {};
   const assenza = row._dati.assenze[data] && row._dati.assenze[data][indice];
   const inizio = document.createElement('input');
   inizio.className = 'orario-input';
@@ -366,12 +396,18 @@ function creaTurnoAgenda(row, turno, container, data, indice, eliminabile = fals
   inizio.placeholder = 'HH:MM';
   inizio.inputMode = 'numeric';
   inizio.maxLength = 6;
-  inizio.value = turno.inizio || '';
+  inizio.value = turno.inizio || (!eliminabile ? turnoBase.inizio || '' : '');
   inizio.setAttribute('aria-label', 'Orario di inizio agenda');
   inizio.addEventListener('keydown', evento => gestisciSpazioOra(inizio, evento));
   inizio.addEventListener('input', () => {
     formattaInputOra(inizio);
     aggiornaTurniAgenda(row, container, data);
+  });
+  inizio.addEventListener('blur', () => {
+    if (!eliminabile && !inizio.value) {
+      inizio.value = turnoBase.inizio || '';
+      aggiornaTurniAgenda(row, container, data);
+    }
   });
   const separatore = document.createElement('span');
   separatore.textContent = '/';
@@ -381,12 +417,18 @@ function creaTurnoAgenda(row, turno, container, data, indice, eliminabile = fals
   fine.placeholder = 'HH:MM';
   fine.inputMode = 'numeric';
   fine.maxLength = 6;
-  fine.value = turno.fine || '';
+  fine.value = turno.fine || (!eliminabile ? turnoBase.fine || '' : '');
   fine.setAttribute('aria-label', 'Orario di fine agenda');
   fine.addEventListener('keydown', evento => gestisciSpazioOra(fine, evento));
   fine.addEventListener('input', () => {
     formattaInputOra(fine);
     aggiornaTurniAgenda(row, container, data);
+  });
+  fine.addEventListener('blur', () => {
+    if (!eliminabile && !fine.value) {
+      fine.value = turnoBase.fine || '';
+      aggiornaTurniAgenda(row, container, data);
+    }
   });
   const btnAssente = document.createElement('button');
   btnAssente.type = 'button';

@@ -138,6 +138,7 @@ body {
 .selettore-data-agenda {
   position: relative;
   display: inline-block;
+  cursor: pointer;
 }
 
 .col-giorno #agenda-data-visibile {
@@ -151,6 +152,7 @@ body {
   font-weight: bold;
   text-align: center;
   cursor: pointer;
+  pointer-events: none;
 }
 
 .sr-only {
@@ -291,6 +293,28 @@ body {
 .riepilogo-table td.totale-assenza {
   color: #ff4d4d;
   font-weight: bold;
+}
+
+.riepilogo-valore {
+  display: block;
+}
+
+.riepilogo-valore + .riepilogo-valore {
+  border-top: 1px solid #444;
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.riepilogo-valore.totale-negativo,
+.riepilogo-totale-fisso.totale-negativo {
+  color: #ff4d4d;
+}
+
+.riepilogo-valore.riepilogo-assenza {
+  color: #ff4d4d;
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .btn-elimina-turno {
