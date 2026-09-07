@@ -1,9 +1,16 @@
 {
-  "name": "Ore Lavoro",
-  "short_name": "OreLavoro",
+  "name": "WorkHour",
+  "short_name": "WorkHour",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#8b00ff",
-  "icons": []
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "704x704",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
