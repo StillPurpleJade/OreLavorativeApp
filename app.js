@@ -802,6 +802,8 @@ function aggiungiDipendente(dati = {}) {
   inputNome.addEventListener('input', () => {
     row._dati.nome = inputNome.value;
     salvaDipendenti();
+  });
+  inputNome.addEventListener('blur', () => {
     if (selettoreOrdinamento.value === 'az') ordinaDipendenti();
   });
   tdNome.appendChild(inputNome);
