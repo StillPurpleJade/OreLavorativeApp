@@ -1093,14 +1093,12 @@ riepilogoMeseSuccessivo.addEventListener('click', () => {
   aggiornaRiepilogo();
 });
 caricaDipendenti();
-if (!agendaSelettoreData.value) {
-  const oggi = new Date();
-  agendaSelettoreData.value = [
-    oggi.getFullYear(),
-    String(oggi.getMonth() + 1).padStart(2, '0'),
-    String(oggi.getDate()).padStart(2, '0')
-  ].join('-');
-}
+const oggi = new Date();
+agendaSelettoreData.value = [
+  oggi.getFullYear(),
+  String(oggi.getMonth() + 1).padStart(2, '0'),
+  String(oggi.getDate()).padStart(2, '0')
+].join('-');
 localStorage.setItem(AGENDA_DATE_KEY, agendaSelettoreData.value);
 aggiornaDataAgendaVisibile();
 const oggiRiepilogo = new Date();
@@ -1108,3 +1106,7 @@ riepilogoMese.value = `${oggiRiepilogo.getFullYear()}-${String(oggiRiepilogo.get
 aggiornaMeseRiepilogoVisibile();
 aggiornaAgenda();
 aggiornaRiepilogo();
+document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === 'agenda'));
+document.querySelectorAll('.page').forEach(page => {
+  page.hidden = page.id !== 'agenda';
+});
