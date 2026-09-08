@@ -108,8 +108,43 @@
           <tbody id="riepilogo-body"></tbody>
         </table>
       </div>
+      <div class="riepilogo-import-export">
+        <button id="btn-esporta-mese" type="button">Esporta mese</button>
+        <button id="btn-importa-mese" type="button">Importa mese</button>
+        <input id="file-importa-mese" type="file" accept="application/json,.json" hidden>
+      </div>
     </section>
   </main>
+
+  <div id="popup-assenza" class="popup-assenza" hidden>
+    <div class="popup-assenza-contenuto" role="dialog" aria-modal="true" aria-labelledby="popup-assenza-titolo">
+      <h2 id="popup-assenza-titolo">Motivazione assenza</h2>
+      <label for="motivazione-assenza">Motivazione</label>
+      <textarea id="motivazione-assenza" rows="3" placeholder="Scrivi la motivazione..."></textarea>
+      <div class="suggerimenti-intestazione">
+        <strong>Suggerimenti</strong>
+        <button id="btn-aggiungi-suggerimento" type="button" aria-label="Aggiungi suggerimento">+</button>
+      </div>
+      <div id="nuovo-suggerimento-area" class="nuovo-suggerimento-area" hidden>
+        <input id="nuovo-suggerimento" type="text" placeholder="Nuovo suggerimento">
+        <button id="btn-salva-suggerimento" type="button">Salva</button>
+      </div>
+      <div id="lista-suggerimenti" class="lista-suggerimenti"></div>
+      <div class="popup-assenza-azioni">
+        <button id="btn-annulla-assenza" type="button">Annulla</button>
+        <button id="btn-salva-assenza" type="button">Salva</button>
+      </div>
+    </div>
+  </div>
+  <div id="popup-dettaglio-assenza" class="popup-assenza" hidden>
+    <div class="popup-assenza-contenuto" role="dialog" aria-modal="true" aria-labelledby="popup-dettaglio-titolo">
+      <h2 id="popup-dettaglio-titolo">Dettaglio assenza</h2>
+      <p id="dettaglio-assenza-testo" class="dettaglio-assenza-testo"></p>
+      <div class="popup-assenza-azioni">
+        <button id="btn-chiudi-dettaglio-assenza" type="button">Chiudi</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

@@ -27,6 +27,21 @@ const riepilogoMesePrecedente = document.getElementById('riepilogo-mese-preceden
 const riepilogoMeseSuccessivo = document.getElementById('riepilogo-mese-successivo');
 const riepilogoHead = document.getElementById('riepilogo-head');
 const riepilogoBody = document.getElementById('riepilogo-body');
+const popupAssenza = document.getElementById('popup-assenza');
+const motivazioneAssenza = document.getElementById('motivazione-assenza');
+const listaSuggerimenti = document.getElementById('lista-suggerimenti');
+const btnAggiungiSuggerimento = document.getElementById('btn-aggiungi-suggerimento');
+const nuovoSuggerimentoArea = document.getElementById('nuovo-suggerimento-area');
+const nuovoSuggerimento = document.getElementById('nuovo-suggerimento');
+const btnSalvaSuggerimento = document.getElementById('btn-salva-suggerimento');
+const btnAnnullaAssenza = document.getElementById('btn-annulla-assenza');
+const btnSalvaAssenza = document.getElementById('btn-salva-assenza');
+const popupDettaglioAssenza = document.getElementById('popup-dettaglio-assenza');
+const dettaglioAssenzaTesto = document.getElementById('dettaglio-assenza-testo');
+const btnChiudiDettaglioAssenza = document.getElementById('btn-chiudi-dettaglio-assenza');
+const btnEsportaMese = document.getElementById('btn-esporta-mese');
+const btnImportaMese = document.getElementById('btn-importa-mese');
+const fileImportaMese = document.getElementById('file-importa-mese');
 const STORAGE_KEY = 'ore-lavoro-dipendenti';
 const ORDER_KEY = 'ore-lavoro-ordinamento';
 const CUSTOM_ORDER_KEY = 'ore-lavoro-ordine-personalizzato';
@@ -34,6 +49,156 @@ const DAY_KEY = 'ore-lavoro-giorno';
 const AGENDA_DATE_KEY = 'ore-lavoro-data-agenda';
 let prossimoId = 1;
 let ordinePersonalizzato = [];
+let popupAssenzaContesto = null;
+let suggerimentiAssenza = [];
+const SUGGESTIONS_KEY = 'workhour-suggerimenti-assenza';
+
+try {
+  const suggerimentiSalvati = JSON.parse(localStorage.getItem(SUGGESTIONS_KEY) || '[]');
+  if (Array.isArray(suggerimentiSalvati)) suggerimentiAssenza = suggerimentiSalvati.filter(Boolean);
+} catch (error) {
+  console.error('Impossibile caricare i suggerimenti assenza:', error);
+}
+
+function salvaSuggerimentiAssenza() {
+  localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggerimentiAssenza));
+}
+
+function renderSuggerimentiAssenza() {
+  listaSuggerimenti.innerHTML = '';
+  suggerimentiAssenza.forEach(suggerimento => {
+    const elemento = document.createElement('div');
+    elemento.className = 'suggerimento-assenza';
+    const usa = document.createElement('button');
+    usa.type = 'button';
+    usa.className = 'suggerimento-testo';
+    usa.textContent = suggerimento;
+    usa.addEventListener('click', () => {
+      motivazioneAssenza.value = suggerimento;
+    });
+    const elimina = document.createElement('button');
+    elimina.type = 'button';
+    elimina.className = 'suggerimento-elimina';
+    elimina.textContent = '×';
+    elimina.title = 'Elimina suggerimento';
+    elimina.addEventListener('click', () => {
+      suggerimentiAssenza = suggerimentiAssenza.filter(voce => voce !== suggerimento);
+      salvaSuggerimentiAssenza();
+      renderSuggerimentiAssenza();
+    });
+    elemento.append(usa, elimina);
+    listaSuggerimenti.appendChild(elemento);
+  });
+}
+
+function apriPopupAssenza(row, data, indice, valoreEsistente = {}) {
+  popupAssenzaContesto = { row, data, indice };
+  motivazioneAssenza.value = valoreEsistente.motivazione || '';
+  renderSuggerimentiAssenza();
+  popupAssenza.hidden = false;
+  motivazioneAssenza.focus();
+}
+
+function chiudiPopupAssenza() {
+  popupAssenza.hidden = true;
+  popupAssenzaContesto = null;
+}
+
+function salvaAssenzaDaPopup() {
+  if (!popupAssenzaContesto) return;
+  const { row, data, indice } = popupAssenzaContesto;
+  const assenze = row._dati.assenze[data] || (row._dati.assenze[data] = {});
+  assenze[indice] = { motivazione: motivazioneAssenza.value.trim(), attiva: true };
+  salvaDipendenti(false);
+  aggiornaAgenda();
+  aggiornaRiepilogo();
+  chiudiPopupAssenza();
+}
+
+function mostraMotivazioneAssenza(row, data, motivazione) {
+  const [, mese, giorno] = data.split('-');
+  const nome = row._dati.nome || 'Dipendente';
+  const dataFormattata = `${giorno}/${mese}`;
+  dettaglioAssenzaTesto.innerHTML = '';
+  const nomeElemento = document.createElement('span');
+  nomeElemento.className = 'dettaglio-assenza-nome';
+  nomeElemento.textContent = nome;
+  const dataElemento = document.createElement('strong');
+  dataElemento.textContent = dataFormattata;
+  const motivazioneElemento = document.createElement('strong');
+  motivazioneElemento.className = 'dettaglio-assenza-motivazione';
+  motivazioneElemento.textContent = motivazione || 'motivazione non specificata';
+  dettaglioAssenzaTesto.append(
+    nomeElemento,
+    ' si è assentato il ',
+    dataElemento,
+    ' per ',
+    motivazioneElemento,
+    '.'
+  );
+  popupDettaglioAssenza.hidden = false;
+}
+
+function aggiornaDatiDaImportazione(datiImportati) {
+  const mese = datiImportati.mese;
+  if (!/^\d{4}-\d{2}$/.test(mese) || !Array.isArray(datiImportati.dipendenti)) {
+    throw new Error('File mese non valido.');
+  }
+  datiImportati.dipendenti.forEach(importato => {
+    let row = [...dipBody.querySelectorAll('.dip-row')].find(elemento =>
+      elemento.dataset.id === importato.id || elemento._dati.nome === importato.nome
+    );
+    if (!row) {
+      aggiungiDipendente(importato);
+      row = [...dipBody.querySelectorAll('.dip-row')].find(elemento =>
+        elemento.dataset.id === importato.id
+      );
+    }
+    if (!row) return;
+    row._dati.nome = importato.nome || row._dati.nome;
+    row._dati.turni = Array.isArray(importato.turni) && importato.turni.length
+      ? importato.turni
+      : row._dati.turni;
+    row._dati.giorni = importato.giorni && typeof importato.giorni === 'object'
+      ? importato.giorni
+      : row._dati.giorni;
+    row._dati.agenda = { ...row._dati.agenda, ...(importato.agenda || {}) };
+    row._dati.assenze = { ...row._dati.assenze, ...(importato.assenze || {}) };
+    row._dati.inizializzato = importato.inizializzato !== false;
+  });
+  if (Array.isArray(datiImportati.suggerimenti)) {
+    suggerimentiAssenza = [...new Set([...suggerimentiAssenza, ...datiImportati.suggerimenti])];
+    salvaSuggerimentiAssenza();
+  }
+  riepilogoMese.value = mese;
+  aggiornaMeseRiepilogoVisibile();
+  salvaDipendenti();
+  window.location.reload();
+}
+
+function esportaMese() {
+  const mese = riepilogoMese.value;
+  const dipendenti = [...dipBody.querySelectorAll('.dip-row')].map(row => ({
+    id: row._dati.id || row.dataset.id,
+    nome: row._dati.nome,
+    turni: row._dati.turni,
+    giorni: row._dati.giorni,
+    agenda: Object.fromEntries(Object.entries(row._dati.agenda).filter(([data]) => data.startsWith(`${mese}-`))),
+    assenze: Object.fromEntries(Object.entries(row._dati.assenze).filter(([data]) => data.startsWith(`${mese}-`)))
+  }));
+  const file = new Blob([JSON.stringify({
+    formato: 'workhour-mese',
+    versione: 2,
+    mese,
+    dipendenti,
+    suggerimenti: suggerimentiAssenza
+  }, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(file);
+  link.download = `workhour-${mese}.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
 
 function dataDaMese(mese, giorno) {
   return `${mese}-${String(giorno).padStart(2, '0')}`;
@@ -43,16 +208,20 @@ function minutiAgenda(row, data) {
   return differenzeTurniAgenda(row, data).reduce((totale, differenza) => totale + differenza.minuti, 0);
 }
 
+function assenzaAttiva(assenza) {
+  return Boolean(assenza) && assenza.attiva !== false;
+}
+
 function differenzeTurniAgenda(row, data) {
   const turni = getTurniAgenda(row, data);
   const giorno = getGiornoSettimana(data);
   const base = row._dati.giorni[giorno] || row._dati.turni;
   const assenze = row._dati.assenze[data] || {};
   return turni.map((turno, indice) => ({
-    minuti: assenze[indice]
+    minuti: assenzaAttiva(assenze[indice])
       ? -getMinutiTurni(base.slice(indice, indice + 1))
       : getMinutiTurni([turno]) - getMinutiTurni(base.slice(indice, indice + 1)),
-    assente: Boolean(assenze[indice])
+    assente: assenzaAttiva(assenze[indice])
   }));
 }
 
@@ -108,6 +277,11 @@ function aggiornaRiepilogo() {
           const valore = document.createElement('span');
           valore.className = 'riepilogo-valore riepilogo-assenza';
           valore.textContent = '/';
+          valore.title = 'Visualizza motivazione assenza';
+          valore.tabIndex = 0;
+          valore.addEventListener('click', () => {
+            mostraMotivazioneAssenza(row, data, row._dati.assenze[data][indiceTurno].motivazione);
+          });
           td.appendChild(valore);
           return;
         }
@@ -368,13 +542,9 @@ function aggiornaTotaleAgenda(row, container, data) {
   turniAgenda.forEach((turno, indice) => {
     const valore = document.createElement('span');
     valore.className = 'tot-valore';
-    if (assenze[indice]) {
+    if (assenzaAttiva(assenze[indice])) {
       valore.classList.add('totale-assenza');
       valore.textContent = '/';
-      const perdita = document.createElement('span');
-      perdita.className = 'assenza-perdita';
-      perdita.textContent = `-${getMinutiTurni(base.slice(indice, indice + 1))}`;
-      valore.appendChild(perdita);
     } else {
       const differenza = getMinutiTurni([turno]) - getMinutiTurni(base.slice(indice, indice + 1));
       valore.textContent = `${differenza >= 0 ? '+' : ''}${differenza}`;
@@ -433,23 +603,25 @@ function creaTurnoAgenda(row, turno, container, data, indice, eliminabile = fals
   const btnAssente = document.createElement('button');
   btnAssente.type = 'button';
   btnAssente.className = 'btn-assente';
-  btnAssente.textContent = assenza ? 'Presente' : 'Assente';
-  div.classList.toggle('turno-assente', Boolean(assenza));
-  div.append(inizio, separatore, fine, btnAssente);
+  btnAssente.textContent = assenzaAttiva(assenza) ? 'Presente' : 'Assente';
+  const motivazione = document.createElement('span');
+  motivazione.className = 'agenda-motivazione-assenza';
+  motivazione.textContent = assenza && assenza.motivazione ? assenza.motivazione : '';
+  motivazione.hidden = !assenzaAttiva(assenza) || !assenza.motivazione;
+  div.classList.toggle('turno-assente', assenzaAttiva(assenza));
+  div.append(inizio, separatore, fine, btnAssente, motivazione);
   btnAssente.addEventListener('click', () => {
     const assenze = row._dati.assenze[data] || (row._dati.assenze[data] = {});
-    if (assenze[indice]) {
-      delete assenze[indice];
+    if (assenzaAttiva(assenze[indice])) {
+      assenze[indice].attiva = false;
       div.classList.remove('turno-assente');
       btnAssente.textContent = 'Assente';
+      motivazione.textContent = '';
+      motivazione.hidden = true;
       salvaDipendenti(false);
       aggiornaTotaleAgenda(row, container, data);
     } else {
-      assenze[indice] = {};
-      div.classList.add('turno-assente');
-      btnAssente.textContent = 'Presente';
-      salvaDipendenti(false);
-      aggiornaTotaleAgenda(row, container, data);
+      apriPopupAssenza(row, data, indice, assenze[indice] || {});
     }
   });
   if (eliminabile) {
@@ -855,6 +1027,54 @@ riepilogoMeseVisibile.addEventListener('click', () => {
   } else {
     riepilogoMese.focus();
   }
+});
+btnAggiungiSuggerimento.addEventListener('click', () => {
+  nuovoSuggerimentoArea.hidden = false;
+  nuovoSuggerimento.focus();
+});
+function salvaNuovoSuggerimento() {
+  const testo = nuovoSuggerimento.value.trim();
+  if (!testo) return;
+  if (!suggerimentiAssenza.includes(testo)) {
+    suggerimentiAssenza.push(testo);
+    salvaSuggerimentiAssenza();
+    renderSuggerimentiAssenza();
+  }
+  nuovoSuggerimento.value = '';
+  nuovoSuggerimentoArea.hidden = true;
+}
+btnSalvaSuggerimento.addEventListener('click', salvaNuovoSuggerimento);
+nuovoSuggerimento.addEventListener('keydown', evento => {
+  if (evento.key === 'Enter') salvaNuovoSuggerimento();
+});
+btnAnnullaAssenza.addEventListener('click', chiudiPopupAssenza);
+btnSalvaAssenza.addEventListener('click', salvaAssenzaDaPopup);
+popupAssenza.addEventListener('click', evento => {
+  if (evento.target === popupAssenza) chiudiPopupAssenza();
+});
+btnChiudiDettaglioAssenza.addEventListener('click', () => {
+  popupDettaglioAssenza.hidden = true;
+});
+popupDettaglioAssenza.addEventListener('click', evento => {
+  if (evento.target === popupDettaglioAssenza) popupDettaglioAssenza.hidden = true;
+});
+btnEsportaMese.addEventListener('click', esportaMese);
+btnImportaMese.addEventListener('click', () => fileImportaMese.click());
+fileImportaMese.addEventListener('change', () => {
+  const file = fileImportaMese.files[0];
+  if (!file) return;
+  const lettore = new FileReader();
+  lettore.addEventListener('load', () => {
+    try {
+      aggiornaDatiDaImportazione(JSON.parse(lettore.result));
+    } catch (error) {
+      console.error('Impossibile importare il mese:', error);
+      window.alert('Il file selezionato non è un mese WorkHour valido.');
+    } finally {
+      fileImportaMese.value = '';
+    }
+  });
+  lettore.readAsText(file);
 });
 riepilogoMesePrecedente.addEventListener('click', () => {
   const data = new Date(`${riepilogoMese.value}-01T12:00:00`);

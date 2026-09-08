@@ -274,7 +274,7 @@ body {
 }
 
 .turno-assente .orario-input,
-.turno-assente > span {
+.turno-assente > span:not(.agenda-motivazione-assenza) {
   opacity: 0.25;
 }
 
@@ -519,4 +519,168 @@ body {
 .riepilogo-table th.riepilogo-totale-fisso {
   background: #2a2a2a !important;
   color: #d4af37;
+}
+
+.riepilogo-import-export {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.riepilogo-import-export button,
+.popup-assenza-azioni button,
+.suggerimenti-intestazione button {
+  padding: 7px 12px;
+  background: #2a2a2a;
+  border: 1px solid #666;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.popup-assenza {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 70%);
+}
+
+.popup-assenza[hidden] {
+  display: none;
+}
+
+.popup-assenza-contenuto {
+  width: min(440px, 100%);
+  padding: 18px;
+  background: #1a1a1a;
+  border: 2px solid #8b00ff;
+  box-shadow: 0 8px 30px #000;
+}
+
+.popup-assenza-contenuto h2 {
+  margin-bottom: 14px;
+  color: #d4af37;
+  font-size: 20px;
+}
+
+.popup-assenza-contenuto label {
+  display: block;
+  margin-bottom: 5px;
+  color: #ccc;
+  font-weight: bold;
+}
+
+#motivazione-assenza {
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  background: #2a2a2a;
+  border: 1px solid #666;
+  color: #fff;
+  font: inherit;
+}
+
+.dettaglio-assenza-testo {
+  padding: 12px;
+  background: #2a2a2a;
+  border-left: 4px solid #ff4d4d;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.dettaglio-assenza-nome {
+  color: #4da6ff;
+  font-weight: bold;
+}
+
+.dettaglio-assenza-motivazione {
+  color: #ff4d4d;
+}
+
+.agenda-motivazione-assenza {
+  flex-basis: 100%;
+  color: #ff4d4d !important;
+  font-size: 13px !important;
+  font-weight: bold;
+  text-align: left;
+}
+
+.suggerimenti-intestazione {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  color: #ccc;
+}
+
+.suggerimenti-intestazione button {
+  min-width: 32px;
+  padding: 3px 8px;
+  color: #4da6ff;
+  font-size: 18px;
+}
+
+.nuovo-suggerimento-area {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.nuovo-suggerimento-area input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  background: #2a2a2a;
+  border: 1px solid #666;
+  color: #fff;
+}
+
+.nuovo-suggerimento-area button {
+  padding: 6px 9px;
+  background: #8b00ff;
+  border: 1px solid #b45cff;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.lista-suggerimenti {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.suggerimento-assenza {
+  display: flex;
+  border: 1px solid #555;
+}
+
+.suggerimento-testo,
+.suggerimento-elimina {
+  padding: 5px 8px;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+.suggerimento-testo {
+  background: #2a2a2a;
+}
+
+.suggerimento-elimina {
+  background: #8b2020;
+}
+
+.popup-assenza-azioni {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
