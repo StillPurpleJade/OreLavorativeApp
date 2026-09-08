@@ -16,13 +16,13 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab active" data-tab="dipendenti">Dipendenti</button>
-    <button class="tab" data-tab="agenda">Agenda</button>
+    <button class="tab" data-tab="dipendenti">Dipendenti</button>
+    <button class="tab active" data-tab="agenda">Agenda</button>
     <button class="tab" data-tab="riepilogo">Riepilogo</button>
   </nav>
 
   <main>
-    <section id="dipendenti" class="page">
+    <section id="dipendenti" class="page" hidden>
       <div class="ordinamento">
         <label for="selettore-ordinamento">Ordina dipendenti:</label>
         <select id="selettore-ordinamento">
@@ -63,7 +63,7 @@
       <p class="save-status">Salvataggio automatico attivo su questo dispositivo</p>
     </section>
 
-    <section id="agenda" class="page" hidden>
+    <section id="agenda" class="page">
       <div class="ordinamento">
         <label for="agenda-selettore-ordinamento">Ordina dipendenti:</label>
         <select id="agenda-selettore-ordinamento">
@@ -146,6 +146,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20260908"></script>
 </body>
 </html>
